@@ -1,0 +1,19 @@
+Client: Copies file in a SRC directory on the client machine to a target directory on the server machine.
+
+*** ABSTRACTIONS ***
+1) ClientFile
+    ClientFile is a class used to represent the files in the source directory.
+2) ServerFile
+3) client_packet
+4) server_packet
+
+
+
+*** DATA STRUCTURES ***
+1) Hashmap files-
+When the client loops through all the filenames in the source directory on the command line, they will be stored
+
+*** STEPS ***
+
+1) Client loops through all the filenames in the source directory on the command line.
+2) To tell the server that an end t

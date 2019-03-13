@@ -1,0 +1,197 @@
+
+ 1. Revisit the definition of values in figure 2.1 on page 95.
+    Next, study the definition of the predefined function `all?` in 
+    section 2.8.3, which starts on page 133.  Like many
+    higher-order functions, `all?` has a subtle contract: it is
+    permissible to call `(all? p? xs)` if and only if there exists a
+    set $A$ such that following are true:
+    
+      - Parameter `p?` is a function that accepts one argument, which
+        must be a member of $A$.  Then `p?` returns a Boolean.
+        
+      - Parameter `xs` is in *LIST(A)*.  That is, `xs` is a list of
+        values, and every element of `xs` is a member of $A$.
+        
+    In other words, `xs` must be a list of values, each of which may
+    be passed to `p?`.
+    
+    With this contract in mind, answer these questions:
+    
+    (a) Write a value that is never permissible as the second,
+        `xs` argument to `all?`, no matter what `p?` is:
+
+        'hello
+
+    (b) Write a value *made with `cons`* that is never permissible as
+        the second, `xs` argument to `all?`, no matter what `p?` is:
+
+        (cons 5 6)
+
+    (c) Write a value that may or may not be permissible as the
+        second, `xs` argument to `all?`, depending on what `p?` is.
+        Your value should be *permissible* if `p?` is `number?`, but
+        *impermissible* if `p?` is `prime?`:
+
+    (You are welcome to use the interpreter to verify that each
+    impermissible call results in a checked run-time error.)
+
+        '(hello)
+
+
+ 2. Study the description of function `list-of?` in problem **L**
+    below, and also the hints.  Now, for each value of `xs` that you
+    listed in the previous question, answer whether it is permissible
+    to pass that value to `list-of?` along with the predicate
+    `prime?`, and if so, what result `list-of?` should return.
+    
+    (a) Permissible?
+        If so, what does `list-of?` return?
+
+        No
+
+    (b) Permissible?
+        If so, what does `list-of?` return?
+
+        No
+
+    (c) Permissible?
+        If so, what does `list-of?` return?
+
+        No
+
+    _You are ready for problem **L**._
+
+ 3. Section 2.12.3, which starts on page 157, describes the semantics
+    of the true-definition forms.  Use the semantics to answer two
+    questions about the following sequence of definitions:
+
+        (val f (lambda () y))
+        (val y 10)
+        (f)
+
+    Given evaluating `lambda` in an environment $\rho$ creates a
+    closure using that same $\rho$, if the definitions above are
+    evaluated in an environment in which $y \in \mathrm{dom}\; \rho$, 
+    then what is the result of the call to `f`? Pick A, B, or C.
+
+      (A) It returns `10`.
+      (B) An error is raised: `Run-time error: name y not found`.
+      (C) It returns whatever value `y` had before the definitions
+          were evaluated.
+
+          A
+
+    If the definitions above are evaluated in an environment in which
+    $y \notin \mathrm{dom} \;\rho$, what is the result of the call to `f`? 
+    Pick either A or B.
+
+      (A) It returns `10`.
+      (B) An error is raised: `Run-time error: name y not found`.
+
+      B
+
+    *You are ready to start problem 45.*
+
+ 4. Read the description of Boolean formulas in the section 
+    "[Representing Boolean formulas](#representing-boolean-formulas)" below.
+    Then revisit the description of μScheme's records in the
+    recitation on higher-order functions.  (Or if you prefer, read
+    section 2.16.6, which starts on page 194, which shows how records
+    are implemented.)  Now assume you are given a formula $f_0$, 
+    and answer these questions:
+    
+    (a) How, in constant time, do you tell if $f_0$ has the form
+        [(make-not $f$)]{.code}?
+
+            not?
+
+    (b) How, in constant time, do you tell if $f_0$ has the form
+        [(make-and $\mathit{fs}$)]{.code}?
+
+            and?
+
+    (c) How, in constant time, do you tell if $f_0$ has the form
+        [(make-or $\mathit{fs}$)]{.code}?
+
+            or?
+
+    *You are ready to start problems L and F.*
+
+ 5. Read the definition of evaluation in problem E below, including
+    the definition of the environment used by `eval-formula`.
+
+    Each of the following Boolean formulas is evaluated in an
+    environment where `x` is `#t`, `y` is `#f`, and `z` is `#f`.
+    What is the result of evaluating each formula?
+    (For each formula, answer `#t`, "true", `#f`, or "false.")
+
+     (a) $x$, which in μScheme is constructed by `'x`
+
+        T
+
+     (b) $¬x$, which in μScheme is constructed by `(make-not 'x)`
+
+        F
+
+     (c) $¬y ∧ x$, which in μScheme is constructed by
+         `(make-and (list2 (make-not 'y) 'x))`
+
+        T
+
+     (d) $¬x ∨ y ∨ z$, which in μScheme is constructed by  
+         `(make-or (list3 (make-not 'x) 'y 'z))`
+
+        F
+
+     (e) Formula `(make-not (make-or (list1 'z)))`, which has a
+         tricky `make-or` applied to a list of length 1, and so can't
+         be written using infix notation
+        
+        T
+    *You are ready to start problem E.*
+
+ 6. Read about the Boolean-satisfaction problem for CNF formulas,
+    in section 2.10.1, which starts on page 143.
+    The rules for satisfaction are the same for all Boolean formulas,
+    even those that are not in CNF.
+    
+    For each of the following Boolean formulas, if there is an
+    assignment to `x`, `y`, and `z` that satisfies the formula,
+    write the words "is solved by" and a satisfying assignment.
+    Incomplete assignments are OK.  If there is no satisfying
+    assignment, write the words "has no solution."
+    
+    Examples:
+    
+    $x‌ ∨ y ∨ z$, which in μScheme is constructed by `(make-or '(x y z))`,
+    is solved by `'((x #t))`
+    
+    $x ∧ y ∧ z$, which in μScheme is constructed by `(make-and '(x y z))`,
+    is solved by `'((x #t) (y #t) (z #t))`
+    
+    $x ∧ ¬x$, which in μScheme is constructed by
+    `(make-and (list2 'x (make-not 'x)))`, has no solution
+
+    For each of these formulas, replace the ellipsis with your answer:
+    
+    (a) $(x ∨ ¬x) ∧ y$, which in μScheme is constructed by  
+        `(make-and (list2 (make-or (list2 'x (make-not 'x))) 'y))`,  
+        No solution
+    
+    (b) $(x ∨ ¬x) ∧ ¬x$, which in μScheme is constructed by  
+        `(make-and (list2 (make-or (list2 'x (make-not 'x))) (make-not 'x)))`,  
+        '((x #t) (y #t))
+
+    (c) $(x ∨ y ∨ z) ∧ (¬x ∧ x) ∧ (x ∨ ¬y ∨ ¬z)$,
+        which in μScheme is constructed by
+
+            (make-and 
+                (list3 (make-or (list3 'x 'y 'z)) 
+                       (make-and (list2 (make-not 'x) 'x))
+                       (make-or (list3 'x (make-not 'y) (make-not 'z))))))
+        No solution
+
+
+    *You are ready to start problems S and T.*
+
+
