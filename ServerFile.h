@@ -2,8 +2,13 @@
 #define SERVERFILE_H
 #include "sharedfiledefs.h"
 
+enum State{INITIAL, WAITING_FOR_E2E_CHECK, WAITING_FOR_E2E_RESULT, WAITING_TO_FINISH, DONE};
+
+
 class ServerFile {
     private:
+
+        State state;
 
         int receivedPacketNum;
         int fileNastiness;
@@ -13,6 +18,7 @@ class ServerFile {
         NASTYFILE* file;
 
         void setup();
+        void changeState(State state);
         server_packet createPacket(Type type);
         void receiveFilePacket(client_packet);
         void performCheck(C150DgmSocket *sock);

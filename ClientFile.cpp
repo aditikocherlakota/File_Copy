@@ -128,7 +128,7 @@ void ClientFile::send(C150DgmSocket *sock, Type type) {
 client_packet ClientFile::createPacket(Type type) {
     client_packet packet;
     packet.type = type;
-    packet.sessionNumber = state;
+    packet.sessionNumber = totalTries;
     cerr << "IM SENDING OUT A PACKET W FILENAME " << filename.c_str() << endl;
     memcpy(&packet.filename, filename.c_str(), filename.length() + 1);
     return packet;

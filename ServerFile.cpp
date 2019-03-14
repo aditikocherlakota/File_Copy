@@ -7,6 +7,10 @@ ServerFile::ServerFile(string filename, int fileNastiness) {
     setup();
 }
 
+void ServerFile::changeState(State state) {
+    this->state = state;
+}
+
 server_packet ServerFile::createPacket(Type type) {
     cerr << "creating server packet of type: " << type << endl;
     server_packet response;
@@ -20,6 +24,7 @@ void ServerFile::setup() {
     cerr << "IN SETUP" << endl;
     done = false;
     receivedPacketNum = -1;
+    changeState(INITIAL);
     file = new C150NastyFile(fileNastiness);
     void *fopenretval = file->fopen(getTempFilename().c_str(), "wb");
     if (fopenretval == NULL) {
@@ -77,31 +82,32 @@ string ServerFile::getTempFilename() {
 }
 
 bool ServerFile::isValidPacketType(client_packet packet) {
-    cerr << packet.sessionNumber << endl;
-
-    return true;
+    return packet.sessionNumber == sessionNumber;
 }
 
 void ServerFile::receiveData(client_packet packet, C150DgmSocket *sock) {
+    cerr << "CURRENT STATE IS: " << state << endl;
     cerr << "I'm the server receiving packet with filename: " << packet.filename << endl;
     cerr << "and a type of: " << packet.type << endl;
-    if ((strcmp(packet.filename, filename.c_str()) != 0) || !isValidPacketType(packet)) {
+    if (!isValidPacketType(packet)) {
         cerr << "DROPPING PACKET" << endl;
         return;
     }
-    if (packet.type == FILE_PACKET) {
+    sessionNumber = packet.sessionNumber;
+    if (packet.type == FILE_PACKET && state == INITIAL) {
         receiveFilePacket(packet);
-    } else if (packet.type == E2E_CHECK) {
+    } else if (packet.type == E2E_CHECK && state == INITIAL) {
         *GRADING << "File: " << packet.filename << " received, beginning end-to-end check" << endl;
         performCheck(sock);
-    } else if (packet.type == E2E_ACK) {
+        changeState(WAITING_FOR_E2E_RESULT);
+    } else if (packet.type == E2E_ACK && state == WAITING_FOR_E2E_RESULT) {
         *GRADING << "File: " << packet.filename << " end-to-end check succeeded" << endl;
         checkAcknowledged(sock);
-    } else if (packet.type == E2E_FAIL) {
+        changeState(DONE);
+    } else if (packet.type == E2E_FAIL && state == WAITING_FOR_E2E_RESULT) {
         *GRADING << "File: " << packet.filename << " end-to-end check failed" << endl;
         checkFailed(sock);
     } else {
-        fprintf(stderr, "Unknown packet type\n");
-        exit(1);
+        return;
     }
 }
