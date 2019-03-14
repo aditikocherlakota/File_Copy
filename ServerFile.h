@@ -18,7 +18,7 @@ class ServerFile {
         void performCheck(C150DgmSocket *sock);
         void checkAcknowledged(C150DgmSocket *sock);
         void checkFailed(C150DgmSocket *sock);
-        bool isValidPacketType(client_packet packet);
+        void openFile();
         string getTempFilename();
 
     public:

@@ -8,7 +8,7 @@ ServerFile::ServerFile(string filename, int fileNastiness) {
 }
 
 server_packet ServerFile::createPacket(Type type) {
-    cerr << "creating server packet of type: " << type << endl;
+    // cerr << "creating server packet of type: " << type << endl;
     server_packet response;
     response.type = type;
     response.sessionNumber = sessionNumber;
@@ -16,16 +16,20 @@ server_packet ServerFile::createPacket(Type type) {
     return response;
 } 
 
-void ServerFile::setup() {
-    cerr << "IN SETUP" << endl;
-    done = false;
-    receivedPacketNum = -1;
-    file = new C150NastyFile(fileNastiness);
-    void *fopenretval = file->fopen(getTempFilename().c_str(), "wb");
+void ServerFile::openFile() {
+    void *fopenretval = file->fopen(getTempFilename().c_str(), "ab");
     if (fopenretval == NULL) {
         cerr << "Error opening input file " << filename << endl;
         exit(12);
-    }
+    } 
+}
+
+void ServerFile::setup() {
+    // cerr << "IN SETUP" << endl;
+    done = false;
+    receivedPacketNum = -1;
+    file = new C150NastyFile(fileNastiness);
+    openFile();
 }
 
 void ServerFile::sendAcks(C150DgmSocket *sock) {
@@ -36,20 +40,22 @@ void ServerFile::sendAcks(C150DgmSocket *sock) {
 
 
 void ServerFile::receiveFilePacket(client_packet packet) {
+    cerr << "inside receive file packet" << endl;
     if (packet.num == receivedPacketNum + 1) {
+        cerr << "writing to file" << endl;
         file->fwrite(packet.datagram, 1, packet.size);
         receivedPacketNum = packet.num;
     }
 }
 
 void ServerFile::performCheck(C150DgmSocket *sock) {
-    cerr << "HITTING PERFORM CHECK" << endl;
+    // cerr << "HITTING PERFORM CHECK" << endl;
     file->fclose();
-    delete file;
 
     unsigned char hash[HASH_LENGTH];
     server_packet response = createPacket(E2E_CONF);
     compute_hash(getTempFilename().c_str(), hash);
+    openFile();
     memcpy(&response.hash, hash, HASH_LENGTH);
     sock->write((char*) &response, sizeof(response));
 }
@@ -65,6 +71,7 @@ void ServerFile::checkFailed(C150DgmSocket *sock) {
     server_packet response = createPacket(E2E_COMPLETE);
     sock->write((char*) &response, sizeof(response));
     remove(getTempFilename().c_str());
+    sessionNumber++;
     setup();
 }
 
@@ -76,19 +83,17 @@ string ServerFile::getTempFilename() {
     return filename + string(".TMP");
 }
 
-bool ServerFile::isValidPacketType(client_packet packet) {
-    cerr << packet.sessionNumber << endl;
-
-    return true;
-}
-
 void ServerFile::receiveData(client_packet packet, C150DgmSocket *sock) {
-    cerr << "I'm the server receiving packet with filename: " << packet.filename << endl;
-    cerr << "and a type of: " << packet.type << endl;
-    if ((strcmp(packet.filename, filename.c_str()) != 0) || !isValidPacketType(packet)) {
-        cerr << "DROPPING PACKET" << endl;
+    // cerr << "I'm the server receiving packet with filename: " << packet.filename << endl;
+    // cerr << "and a type of: " << packet.type << endl;
+
+    cerr << "CLIENT PACKET SESSION NUMBER: " << packet.sessionNumber << endl;
+    cerr << "CLIENT PACKET SESSION NUMBER: " << sessionNumber << endl;
+
+    if (packet.sessionNumber != sessionNumber) {
         return;
     }
+
     if (packet.type == FILE_PACKET) {
         receiveFilePacket(packet);
     } else if (packet.type == E2E_CHECK) {

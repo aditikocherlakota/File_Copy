@@ -36,15 +36,16 @@ void run(char *argv[]) {
         while (true) {
             file.sendData(sock);
             readlen = sock->read((char*) &serverResponse, sizeof(serverResponse));
-            cerr << "I'm reading the server response packet, and it has a filename of: " << serverResponse.filename << endl; 
+            // cerr << "I'm reading the server response packet, and it has a filename of: " << serverResponse.filename << endl; 
             if (file.shouldContinue()) {
-                cerr << "INSIDE SHOULD CONTINUE" << endl;
+                // cerr << "INSIDE SHOULD CONTINUE" << endl;
                 if (sock->timedout() || readlen <= 0) {
                     file.timeOut();
                 } else {
                     file.receiveData(serverResponse);
                 }
             } else {
+                cerr << "ABORTING" << endl;
                 break;
             }
             if (file.isDone()) {

@@ -10,8 +10,8 @@ using namespace C150NETWORK;
 void setUpDebugLogging(const char *logname, int argc, char *argv[]);
 
 void run(char *argv[]) {
+    map<string, ServerFile*> files;
     ssize_t readlen;
-    ServerFile *file = NULL;
     int fileNastiness = atoi(argv[2]);
     int networkNastiness = atoi(argv[1]);
     c150debug->printf(C150APPLICATION, "Creating C150NastyDgmSocket(nastiness=%d)",
@@ -25,21 +25,20 @@ void run(char *argv[]) {
         readlen = sock->read((char *)&packet, sizeof(packet));
 
         if (sock->timedout() || readlen <= 0) {
-            if (file != NULL && !file->isDone()) {
-                file->sendAcks(sock);
+            for (std::map<string,ServerFile*>::iterator it=files.begin(); it!=files.end(); ++it){
+                ServerFile* file = it->second;
+                if (!file->isDone()) {
+                    file->sendAcks(sock);
+                }
             }
         } else {
-            if (file == NULL || (file->isDone() && strcmp(file->filename.c_str(), packet.filename) != 0)) {
-                if (file != NULL) {
-                    cerr << "closing file on server side: " << file->filename.c_str() << endl;
-                    delete file;
-                    file = NULL;
-                }
-                file = new ServerFile(string(packet.filename), fileNastiness); 
+            if (files.count(packet.filename) < 1) {
+                ServerFile* file = new ServerFile(string(packet.filename), fileNastiness); 
+                files.insert({string(packet.filename), file});
                 cerr << "making new server file: " << string(packet.filename) << endl;
                 *GRADING << "File: " << packet.filename << " starting to receive file" << endl;
             }
-            file->receiveData(packet, sock);
+            files.find(packet.filename)->second->receiveData(packet, sock);
         }   
     }
 }
